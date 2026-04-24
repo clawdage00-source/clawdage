@@ -3,7 +3,7 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to your account",
+  description: "Sign in with magic link",
 };
 
 export default function LoginPage() {
@@ -12,10 +12,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-black/[.08] bg-white px-8 py-10 shadow-sm dark:border-white/[.145] dark:bg-zinc-950">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Sign in
+            Welcome back
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Enter your credentials to continue.
+            Enter your email and we will send you a magic link.
           </p>
         </div>
         <LoginForm />

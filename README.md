@@ -18,6 +18,32 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Database setup (Supabase)
+
+Add your Supabase Postgres connection string to `.env.local`:
+
+```bash
+DATABASE_URL=your_supabase_postgres_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Apply your schema from `Untitled-2.sql`:
+
+```bash
+npm run db:migrate
+```
+
+Optional: verify DB connectivity by visiting `/api/health/db` while the dev server is running.
+
+## Auth + onboarding flow
+
+- `/login` -> enter email -> magic link is sent by Supabase.
+- `/auth/callback` -> verifies session and routes to the next onboarding step.
+- `/onboarding/profile` -> collect user full name.
+- `/onboarding/kitchen` -> create first kitchen.
+- `/dashboard` -> landing page after setup.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
