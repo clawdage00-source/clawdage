@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
+import { useUserKitchenQuery } from "@/lib/queries/user-kitchen";
 
 type NavItem = {
   id: string;
@@ -11,6 +12,8 @@ type NavItem = {
   badge?: string;
   children?: Array<{ id: string; label: string }>;
 };
+
+type DropPosition = "before" | "after";
 
 function Icon({
   path,
@@ -37,6 +40,7 @@ function Icon({
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [isPinnedOpen, setIsPinnedOpen] = useState(false);
   const [isHoverOpen, setIsHoverOpen] = useState(false);
@@ -44,6 +48,7 @@ export default function DashboardPage() {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [activeChild, setActiveChild] = useState("ingredients-list");
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string; position: DropPosition } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
@@ -57,11 +62,21 @@ export default function DashboardPage() {
         router.replace("/login");
         return;
       }
+      setUserId(user.id);
       setEmail(user.email ?? null);
     }
 
     loadUser();
   }, [router]);
+
+  const {
+    data: kitchenData,
+    isLoading: isKitchenLoading,
+    isError: isKitchenError,
+    error: kitchenError,
+  } = useUserKitchenQuery(userId);
+
+  const kitchenName = kitchenData?.kitchenName?.trim() || "My Kitchen";
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -133,7 +148,7 @@ export default function DashboardPage() {
     expanded ? "w-72" : "w-20"
   }`;
 
-  function moveItem(draggedId: string, targetId: string) {
+  function moveItem(draggedId: string, targetId: string, position: DropPosition) {
     setReorderableItems((prev) => {
       const draggedIndex = prev.findIndex((item) => item.id === draggedId);
       const targetIndex = prev.findIndex((item) => item.id === targetId);
@@ -143,7 +158,12 @@ export default function DashboardPage() {
 
       const updated = [...prev];
       const [movedItem] = updated.splice(draggedIndex, 1);
-      updated.splice(targetIndex, 0, movedItem);
+      const destinationIndex = updated.findIndex((item) => item.id === targetId);
+      if (destinationIndex === -1) {
+        return prev;
+      }
+      const insertIndex = position === "before" ? destinationIndex : destinationIndex + 1;
+      updated.splice(insertIndex, 0, movedItem);
       return updated;
     });
   }
@@ -172,10 +192,15 @@ export default function DashboardPage() {
           }
           const draggedId = event.dataTransfer.getData("text/plain") || draggedItemId;
           if (!draggedId || draggedId === item.id || draggedId === "dashboard") {
+            setDropTarget(null);
             return;
           }
           event.preventDefault();
           event.dataTransfer.dropEffect = "move";
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const position: DropPosition =
+            event.clientY < bounds.top + bounds.height / 2 ? "before" : "after";
+          setDropTarget({ id: item.id, position });
         }}
         onDrop={(event: DragEvent<HTMLLIElement>) => {
           if (!isReorderable) {
@@ -183,15 +208,41 @@ export default function DashboardPage() {
           }
           event.preventDefault();
           const draggedId = event.dataTransfer.getData("text/plain") || draggedItemId;
+          const dropPosition = dropTarget?.id === item.id ? dropTarget.position : "before";
           if (!draggedId || draggedId === item.id || draggedId === "dashboard") {
             setDraggedItemId(null);
+            setDropTarget(null);
             return;
           }
-          moveItem(draggedId, item.id);
+          moveItem(draggedId, item.id, dropPosition);
           setDraggedItemId(null);
+          setDropTarget(null);
         }}
-        onDragEnd={() => setDraggedItemId(null)}
+        onDragLeave={(event: DragEvent<HTMLLIElement>) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDropTarget((prev) => (prev?.id === item.id ? null : prev));
+          }
+        }}
+        onDragEnd={() => {
+          setDraggedItemId(null);
+          setDropTarget(null);
+        }}
       >
+        {dropTarget?.id === item.id && dropTarget.position === "before" ? (
+          <div className="mb-1.5">
+            <div className="flex h-[52px] items-center rounded-2xl border border-[#261FFF]/30 bg-gradient-to-r from-[#261FFF]/12 via-[#261FFF]/8 to-transparent px-3">
+              <span className="h-8 w-8 rounded-xl border border-[#261FFF]/35 bg-white/70" />
+              {expanded ? (
+                <>
+                  <span className="ml-2 h-3 w-28 rounded-full bg-[#261FFF]/30" />
+                  <span className="ml-auto text-[11px] font-semibold uppercase tracking-[0.16em] text-[#261FFF]/80">
+                    Drop
+                  </span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={() => setActiveItem(item.id)}
@@ -226,6 +277,21 @@ export default function DashboardPage() {
             </>
           ) : null}
         </button>
+        {dropTarget?.id === item.id && dropTarget.position === "after" ? (
+          <div className="mt-1.5">
+            <div className="flex h-[52px] items-center rounded-2xl border border-[#261FFF]/30 bg-gradient-to-r from-[#261FFF]/12 via-[#261FFF]/8 to-transparent px-3">
+              <span className="h-8 w-8 rounded-xl border border-[#261FFF]/35 bg-white/70" />
+              {expanded ? (
+                <>
+                  <span className="ml-2 h-3 w-28 rounded-full bg-[#261FFF]/30" />
+                  <span className="ml-auto text-[11px] font-semibold uppercase tracking-[0.16em] text-[#261FFF]/80">
+                    Drop
+                  </span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         {showChildren ? (
           <ul className="mt-2 space-y-1 border-l border-zinc-200 pl-6">
@@ -364,9 +430,11 @@ export default function DashboardPage() {
                   aria-expanded={isUserMenuOpen}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#261FFF] to-blue-300 text-xs font-semibold text-white">
-                    C
+                    {kitchenName.charAt(0).toUpperCase()}
                   </span>
-                  <span className="hidden text-sm font-semibold md:inline">clawdage</span>
+                  <span className="hidden max-w-[150px] truncate text-sm font-semibold md:inline">
+                    {kitchenName}
+                  </span>
                   <Icon path="m6 9 6 6 6-6" className="h-4 w-4 text-zinc-500" />
                 </button>
 
@@ -440,6 +508,22 @@ export default function DashboardPage() {
               {" "}
               Navigate through modules from the expandable menu to manage inventory, sales, and forecasting.
             </p>
+            <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-700">
+              <p className="font-semibold text-zinc-900">User Kitchen API (TanStack Query)</p>
+              <p className="mt-1">
+                Status:{" "}
+                {isKitchenLoading ? "Loading..." : isKitchenError ? "Error" : kitchenData ? "Success" : "Idle"}
+              </p>
+              <p className="mt-1 break-all">
+                Data:{" "}
+                {kitchenData ? JSON.stringify(kitchenData) : "No data yet"}
+              </p>
+              {isKitchenError ? (
+                <p className="mt-1 text-red-600">
+                  Error: {kitchenError instanceof Error ? kitchenError.message : "Unknown error"}
+                </p>
+              ) : null}
+            </div>
           </div>
         </main>
       </div>
