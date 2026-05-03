@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase-client";
+import { getAuthUserSerialized } from "@/lib/supabase-auth-user";
 
 export default function ProfileOnboardingPage() {
   const router = useRouter();
@@ -13,9 +13,7 @@ export default function ProfileOnboardingPage() {
 
   useEffect(() => {
     async function checkSession() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getAuthUserSerialized();
       if (!user) {
         router.replace("/login");
         return;
@@ -31,9 +29,7 @@ export default function ProfileOnboardingPage() {
     setError(null);
     setSubmitting(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getAuthUserSerialized();
 
     if (!user) {
       router.replace("/login");
@@ -63,25 +59,28 @@ export default function ProfileOnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 dark:bg-black">
-        <p className="text-sm text-zinc-700 dark:text-zinc-300">
-          Loading your profile...
-        </p>
+      <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 dark:bg-zinc-950">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
-      <div className="w-full max-w-md rounded-2xl border border-black/[.08] bg-white px-8 py-10 shadow-sm dark:border-white/[.145] dark:bg-zinc-950">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Your name
-        </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Tell us what we should call you.
-        </p>
+    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-20 dark:bg-zinc-950">
+      <div className="w-full max-w-[26rem]">
+        <header className="mb-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+            Onboarding
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 md:text-[1.65rem] dark:text-zinc-50">
+            Your name
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            How should we address you in the product?
+          </p>
+        </header>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <label
               htmlFor="fullName"
@@ -95,7 +94,7 @@ export default function ProfileOnboardingPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className="h-11 w-full rounded-lg border border-black/[.08] bg-white px-3.5 text-base text-zinc-950 shadow-sm outline-none transition-[border-color,box-shadow] placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-400/20 dark:border-white/[.145] dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500/20"
+              className="h-11 w-full rounded-md border border-zinc-200 bg-white px-3.5 text-[15px] text-zinc-950 outline-none transition-[border-color,box-shadow] placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-950/[0.04] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-500"
               placeholder="Alex Quinn"
             />
           </div>
@@ -105,9 +104,9 @@ export default function ProfileOnboardingPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex h-12 w-full items-center justify-center rounded-full bg-foreground px-5 text-sm font-medium text-background transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center rounded-md bg-zinc-900 px-5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
           >
-            {submitting ? "Saving..." : "Continue"}
+            {submitting ? "Saving…" : "Continue"}
           </button>
         </form>
       </div>

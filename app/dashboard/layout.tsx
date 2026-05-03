@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { getAuthUserSerialized } from "@/lib/supabase-auth-user";
 import { supabase } from "@/lib/supabase-client";
 import { useUserKitchenQuery } from "@/lib/queries/user-kitchen";
 
@@ -60,9 +61,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getAuthUserSerialized();
       if (!user) {
         router.replace("/login");
         return;
@@ -135,8 +134,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const expanded = isMobileOpen || isPinnedOpen || isHoverOpen;
 
-  const sidebarClassName = `flex h-full flex-col rounded-[2rem] bg-white/55 supports-[backdrop-filter]:bg-white/45 backdrop-blur-xl border border-white/40 shadow-[0_14px_34px_rgba(0,0,0,0.10)] transition-[width,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-    expanded ? "w-72" : "w-20"
+  const sidebarClassName = `flex h-full flex-col border-r border-zinc-200 bg-white transition-[width] duration-300 ease-out ${
+    expanded ? "w-64" : "w-[4.5rem]"
   }`;
 
   function moveItem(draggedId: string, targetId: string) {
@@ -201,12 +200,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {item.href ? (
           <Link
             href={item.href}
-            className={`group flex w-full items-center rounded-2xl py-2 text-left text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] focus-visible:ring-offset-2 ${
-              expanded ? "justify-start px-3" : "justify-center px-0"
+            className={`group flex w-full items-center rounded-md py-2 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 ${
+              expanded ? "justify-start px-2.5" : "justify-center px-0"
             } ${
               isActiveParent
-                ? "bg-black text-white shadow-sm"
-                : "text-black hover:bg-zinc-100"
+                ? "bg-zinc-100 text-zinc-900"
+                : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
             }`}
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
@@ -217,8 +216,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <span className="ml-2 flex-1 truncate">{item.label}</span>
                 {item.badge ? (
                   <span
-                    className={`ml-2 inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs ${
-                      isActiveParent ? "bg-white text-black" : "bg-black text-white"
+                    className={`ml-2 inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      isActiveParent ? "bg-white text-zinc-900 ring-1 ring-zinc-200" : "bg-zinc-900 text-white"
                     }`}
                   >
                     {item.badge}
@@ -235,12 +234,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         ) : (
           <button
             type="button"
-            className={`group flex w-full items-center rounded-2xl py-2 text-left text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] focus-visible:ring-offset-2 ${
-              expanded ? "justify-start px-3" : "justify-center px-0"
+            className={`group flex w-full items-center rounded-md py-2 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 ${
+              expanded ? "justify-start px-2.5" : "justify-center px-0"
             } ${
               isActiveParent
-                ? "bg-black text-white shadow-sm"
-                : "text-black hover:bg-zinc-100"
+                ? "bg-zinc-100 text-zinc-900"
+                : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
             }`}
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
@@ -260,17 +259,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
 
         {showChildren ? (
-          <ul className="mt-2 space-y-1 border-l border-zinc-200 pl-6">
+          <ul className="mt-1 space-y-0.5 border-l border-zinc-200 pl-4">
             {item.children?.map((child) => {
               const isChildActive = pathname === child.href;
               return (
                 <li key={child.id}>
                   <Link
                     href={child.href}
-                    className={`block w-full rounded-xl px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] focus-visible:ring-offset-2 ${
+                    className={`block w-full rounded-md py-1.5 pl-3 pr-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 ${
                       isChildActive
-                        ? "bg-zinc-100 font-semibold text-black"
-                        : "text-zinc-700 hover:bg-zinc-100 hover:text-black"
+                        ? "font-medium text-zinc-900"
+                        : "text-zinc-600 hover:text-zinc-900"
                     }`}
                   >
                     {child.label}
@@ -285,20 +284,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top,_#ffffff_0%,_#eef0f5_50%,_#e8ebf3_100%)] text-black">
-      <aside className="hidden p-3 md:block">
+    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+      <aside className="sticky top-0 hidden h-svh shrink-0 md:block">
         <div
-          className={sidebarClassName}
+          className={`${sidebarClassName} h-full`}
           onMouseEnter={() => setIsHoverOpen(true)}
           onMouseLeave={() => setIsHoverOpen(false)}
         >
-          <div className="flex h-full flex-col gap-3 rounded-[2rem] border border-white/50 bg-white/80 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_26px_rgba(0,0,0,0.10)] supports-[backdrop-filter]:bg-white/72 supports-[backdrop-filter]:backdrop-blur-xl">
-            <div className="flex min-h-10 items-center gap-2 px-1 pt-1">
+          <div className="flex h-full flex-col gap-1 px-2 py-5">
+            <div className="flex min-h-10 items-center gap-2 px-1">
               {expanded ? (
                 <button
                   type="button"
                   onClick={() => setIsPinnedOpen((prev) => !prev)}
-                  className="ml-auto rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF]"
+                  className="ml-auto rounded-md p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                   aria-label={isPinnedOpen ? "Unpin sidebar" : "Pin sidebar"}
                 >
                   <Icon
@@ -313,10 +312,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <ul className="space-y-1.5">{navItems.map(renderNavItem)}</ul>
             </nav>
 
-            <div className="mt-8 border-t border-zinc-200 pt-3">
+            <div className="mt-auto border-t border-zinc-200 pt-3">
               <button
                 type="button"
-                className="flex w-full items-center rounded-2xl px-3 py-2 text-sm text-black transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] focus-visible:ring-offset-2"
+                className="flex w-full items-center rounded-md px-2.5 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
               >
                 <span className="flex h-9 w-9 items-center justify-center">
                   <Icon path="M12 3v3m0 12v3m9-9h-3M6 12H3m14.4 6.4-2.1-2.1M8.7 8.7 6.6 6.6m10.8 0-2.1 2.1M8.7 15.3l-2.1 2.1" />
@@ -326,7 +325,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="mt-2 flex w-full items-center rounded-2xl px-3 py-2 text-sm text-black transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] focus-visible:ring-offset-2"
+                className="mt-1 flex w-full items-center rounded-md px-2.5 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
               >
                 <span className="flex h-9 w-9 items-center justify-center">
                   <Icon path="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 13 5-4-5-4M21 12H9" />
@@ -339,21 +338,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="relative z-30 mx-3 mt-3 rounded-2xl border border-white/55 bg-white/82 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_10px_24px_rgba(15,23,42,0.10)] supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:backdrop-blur-2xl md:mx-6 md:mt-6 md:px-6">
-          <div className="flex flex-wrap items-center gap-3 md:grid md:grid-cols-[auto_1fr_auto] md:gap-3">
+        <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 backdrop-blur-md">
+          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3 px-4 py-3 md:grid md:grid-cols-[auto_1fr_auto] md:gap-4 md:px-6 md:py-3.5">
             <button
               type="button"
               onClick={() => setIsMobileOpen((prev) => !prev)}
-              className="rounded-xl border border-black/10 px-3 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF] md:hidden"
+              className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 md:hidden"
             >
               {isMobileOpen ? "Close Menu" : "Open Menu"}
             </button>
 
-            <div className="hidden items-center rounded-xl bg-zinc-50 px-3 py-2 md:flex">
-              <span className="text-xl font-semibold text-black">Dashboard</span>
+            <div className="hidden items-center md:flex">
+              <span className="text-[15px] font-semibold tracking-tight text-zinc-900">
+                Operations
+              </span>
             </div>
 
-            <label className="group flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 transition-colors focus-within:border-[#261FFF] focus-within:bg-white md:w-full md:max-w-md md:justify-self-center">
+            <label className="group flex min-w-[220px] flex-1 items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50/80 px-3 py-2 transition-colors focus-within:border-zinc-300 focus-within:bg-white md:w-full md:max-w-md md:justify-self-center">
               <Icon path="m21 21-4.3-4.3M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z" className="h-4 w-4 text-zinc-500" />
               <input
                 value={searchQuery}
@@ -367,14 +368,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="ml-auto flex items-center gap-2 md:ml-0 md:justify-self-end">
               <button
                 type="button"
-                className="relative rounded-xl border border-zinc-200 bg-white p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF]"
+                className="relative rounded-md border border-zinc-200 bg-white p-2 text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                 aria-label="Refresh data"
               >
                 <Icon path="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" className="h-4 w-4" />
               </button>
               <button
                 type="button"
-                className="relative rounded-xl border border-zinc-200 bg-white p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF]"
+                className="relative rounded-md border border-zinc-200 bg-white p-2 text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                 aria-label="Notifications"
               >
                 <Icon path="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0" className="h-4 w-4" />
@@ -387,11 +388,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#261FFF]"
+                  className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-2 py-1.5 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                   aria-haspopup="menu"
                   aria-expanded={isUserMenuOpen}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#261FFF] to-blue-300 text-xs font-semibold text-white">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-900 text-xs font-semibold text-white">
                     {kitchenName.charAt(0).toUpperCase()}
                   </span>
                   <span className="hidden text-sm font-semibold md:inline">{kitchenName}</span>
@@ -401,24 +402,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {isUserMenuOpen ? (
                   <div
                     role="menu"
-                    className="absolute right-0 top-12 z-50 w-56 rounded-2xl border border-black/10 bg-white p-2 shadow-[0_14px_36px_rgba(0,0,0,0.14)]"
+                    className="absolute right-0 top-12 z-50 w-56 rounded-md border border-zinc-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
                   >
-                    <button type="button" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm hover:bg-zinc-100" role="menuitem">
+                    <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" role="menuitem">
                       <Icon path="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0" className="h-4 w-4" />
                       Profile
                     </button>
-                    <button type="button" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm hover:bg-zinc-100" role="menuitem">
+                    <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50" role="menuitem">
                       <Icon path="M12 3v3m0 12v3m9-9h-3M6 12H3m14.4 6.4-2.1-2.1M8.7 8.7 6.6 6.6m10.8 0-2.1 2.1M8.7 15.3l-2.1 2.1" className="h-4 w-4" />
                       Settings
                     </button>
-                    <div className="rounded-xl px-3 py-2 text-left text-xs text-zinc-500">
+                    <div className="px-3 py-2 text-left text-xs text-zinc-500">
                       {email ?? "No email"}
                     </div>
                     <div className="my-1 border-t border-zinc-200" />
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                       role="menuitem"
                     >
                       <Icon path="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 13 5-4-5-4M21 12H9" className="h-4 w-4" />
@@ -432,12 +433,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {isMobileOpen ? (
-          <aside className="border-b border-black/10 bg-white p-3 md:hidden">
+          <aside className="border-b border-zinc-200 bg-white p-4 md:hidden">
             <div className="space-y-2">
               <ul className="space-y-2">{navItems.map(renderNavItem)}</ul>
               <button
                 type="button"
-                className="flex w-full items-center rounded-xl px-3 py-2 text-sm hover:bg-zinc-100"
+                className="flex w-full items-center rounded-md px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
               >
                 <span className="mr-2">
                   <Icon path="M12 3v3m0 12v3m9-9h-3M6 12H3m14.4 6.4-2.1-2.1M8.7 8.7 6.6 6.6m10.8 0-2.1 2.1M8.7 15.3l-2.1 2.1" />
@@ -447,7 +448,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex w-full items-center rounded-xl px-3 py-2 text-sm hover:bg-zinc-100"
+                className="flex w-full items-center rounded-md px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
               >
                 <span className="mr-2">
                   <Icon path="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 13 5-4-5-4M21 12H9" />

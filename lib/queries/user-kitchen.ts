@@ -12,8 +12,10 @@ export function useUserKitchenQuery(userId: string | null) {
   return useQuery({
     queryKey: userKitchenQueryKey(userId),
     enabled: Boolean(userId),
-    queryFn: async (): Promise<UserKitchenResponse> => {
-      const response = await fetch(`/api/user/kitchen?userId=${encodeURIComponent(userId ?? "")}`);
+    queryFn: async ({ signal }): Promise<UserKitchenResponse> => {
+      const response = await fetch(`/api/user/kitchen?userId=${encodeURIComponent(userId ?? "")}`, {
+        signal,
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch kitchen details");
       }

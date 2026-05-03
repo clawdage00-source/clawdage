@@ -8,16 +8,19 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
-      <div className="w-full max-w-md rounded-2xl border border-black/[.08] bg-white px-8 py-10 shadow-sm dark:border-white/[.145] dark:bg-zinc-950">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-20 dark:bg-zinc-950">
+      <div className="w-full max-w-[26rem]">
+        <header className="mb-10 text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+            Sign in
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 md:text-[1.65rem] dark:text-zinc-50">
             Welcome back
           </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Enter your email and we will send you a magic link.
+          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            We&apos;ll email you a secure magic link—no password to remember.
           </p>
-        </div>
+        </header>
         <LoginForm />
       </div>
     </div>

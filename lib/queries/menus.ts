@@ -21,8 +21,8 @@ export function useMenusQuery(userId: string | null) {
   return useQuery({
     queryKey: ["menus", userId],
     enabled: Boolean(userId),
-    queryFn: async () => {
-      const res = await fetch(`/api/menus?userId=${encodeURIComponent(userId ?? "")}`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/menus?userId=${encodeURIComponent(userId ?? "")}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to fetch menus");
       }
@@ -35,8 +35,10 @@ export function useMenuDetailQuery(userId: string | null, menuId: string | null)
   return useQuery({
     queryKey: ["menu", userId, menuId],
     enabled: Boolean(userId && menuId),
-    queryFn: async () => {
-      const res = await fetch(`/api/menus/${menuId}?userId=${encodeURIComponent(userId ?? "")}`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/menus/${menuId}?userId=${encodeURIComponent(userId ?? "")}`, {
+        signal,
+      });
       if (!res.ok) {
         throw new Error("Failed to fetch menu details");
       }

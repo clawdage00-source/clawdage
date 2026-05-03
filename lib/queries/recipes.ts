@@ -23,8 +23,10 @@ export function useRecipesQuery(userId: string | null) {
   return useQuery({
     queryKey: recipesQueryKey(userId),
     enabled: Boolean(userId),
-    queryFn: async () => {
-      const res = await fetch(`/api/recipes?userId=${encodeURIComponent(userId ?? "")}`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/recipes?userId=${encodeURIComponent(userId ?? "")}`, {
+        signal,
+      });
       if (!res.ok) {
         throw new Error("Failed to fetch recipes");
       }
@@ -37,9 +39,10 @@ export function useRecipeDetailQuery(userId: string | null, recipeId: string | n
   return useQuery({
     queryKey: ["recipe", userId, recipeId],
     enabled: Boolean(userId && recipeId),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await fetch(
         `/api/recipes/${recipeId}?userId=${encodeURIComponent(userId ?? "")}`,
+        { signal },
       );
       if (!res.ok) {
         throw new Error("Failed to fetch recipe details");

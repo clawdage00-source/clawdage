@@ -13,8 +13,8 @@ export function useBatchesQuery(userId: string | null) {
   return useQuery({
     queryKey: ["batches", userId],
     enabled: Boolean(userId),
-    queryFn: async () => {
-      const res = await fetch(`/api/batches?userId=${encodeURIComponent(userId ?? "")}`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/batches?userId=${encodeURIComponent(userId ?? "")}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to fetch batches");
       }
