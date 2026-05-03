@@ -25,6 +25,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Kitchen context not found" }, { status: 404 });
     }
 
+    const rawLimit = searchParams.get("limit");
+    const rawOffset = searchParams.get("offset");
+    const limit = Math.min(100, Math.max(1, Number.parseInt(rawLimit ?? "10", 10) || 10));
+    const offset = Math.max(0, Number.parseInt(rawOffset ?? "0", 10) || 0);
+
+    const statsResult = await db.query(
+      `
+      SELECT
+        COUNT(*)::int AS "totalCount",
+        COALESCE(SUM(w.quantity_wasted), 0) AS "totalQuantityWasted"
+      FROM "waste_logs" w
+      WHERE w.kitchen_id = $1::uuid
+      `,
+      [context.kitchenId],
+    );
+    const statsRow = statsResult.rows[0] as {
+      totalCount: number;
+      totalQuantityWasted: string | number;
+    };
+
     const result = await db.query(
       `
       SELECT
@@ -38,11 +58,19 @@ export async function GET(request: Request) {
       JOIN "ingredients" i ON i.id = w.ingredient_id
       WHERE w.kitchen_id = $1::uuid
       ORDER BY w.waste_date DESC, w.id DESC
+      LIMIT $2
+      OFFSET $3
       `,
-      [context.kitchenId],
+      [context.kitchenId, limit, offset],
     );
 
-    return NextResponse.json({ items: result.rows });
+    return NextResponse.json({
+      items: result.rows,
+      totalCount: Number(statsRow.totalCount),
+      totalQuantityWasted: Number(statsRow.totalQuantityWasted),
+      limit,
+      offset,
+    });
   } catch (error) {
     return internalApiError("/api/waste-logs GET", error);
   }

@@ -35,13 +35,13 @@ export function useIngredientsQuery(userId: string | null, q: string, lowStockOn
   return useQuery({
     queryKey: ingredientsQueryKey(userId, q, lowStockOnly),
     enabled: Boolean(userId),
-    queryFn: async (): Promise<{ items: Ingredient[] }> => {
+    queryFn: async ({ signal }): Promise<{ items: Ingredient[] }> => {
       const params = new URLSearchParams({
         userId: userId ?? "",
         q,
         lowStockOnly: String(lowStockOnly),
       });
-      const res = await fetch(`/api/ingredients?${params.toString()}`);
+      const res = await fetch(`/api/ingredients?${params.toString()}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to fetch ingredients");
       }

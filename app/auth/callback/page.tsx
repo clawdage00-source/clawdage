@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getAuthUserSerialized } from "@/lib/supabase-auth-user";
 import { supabase } from "@/lib/supabase-client";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [message, setMessage] = useState("Verifying your magic link...");
+  const [message, setMessage] = useState("Verifying your magic link…");
 
   useEffect(() => {
     async function completeAuth() {
@@ -16,12 +17,10 @@ export default function AuthCallbackPage() {
         await supabase.auth.exchangeCodeForSession(code);
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getAuthUserSerialized();
 
       if (!user) {
-        setMessage("Session not found. Please try sign in again.");
+        setMessage("Session not found. Please sign in again.");
         return;
       }
 
@@ -53,8 +52,22 @@ export default function AuthCallbackPage() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 dark:bg-black">
-      <p className="text-sm text-zinc-700 dark:text-zinc-300">{message}</p>
+    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-20 dark:bg-zinc-950">
+      <p className="text-[15px] text-zinc-600 dark:text-zinc-400">{message}</p>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center bg-zinc-50 px-6 py-20 dark:bg-zinc-950">
+          <p className="text-[15px] text-zinc-600 dark:text-zinc-400">Loading…</p>
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
