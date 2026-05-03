@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import pg from "pg";
 
@@ -11,8 +11,7 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
-const migrationFile = resolve(process.cwd(), "Untitled-2.sql");
-const sql = await readFile(migrationFile, "utf8");
+const migrationsDir = resolve(process.cwd(), "db/migrations");
 
 const client = new Client({
   connectionString: databaseUrl,
@@ -23,27 +22,46 @@ const client = new Client({
 
 try {
   await client.connect();
-  const existingCoreTable = await client.query(
-    "select to_regclass('public.kitchens') is not null as exists",
-  );
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS "_migrations" (
+      "name" varchar PRIMARY KEY,
+      "applied_at" timestamp NOT NULL DEFAULT NOW()
+    )
+  `);
 
-  if (existingCoreTable.rows[0]?.exists) {
-    console.log(
-      "Migration skipped: schema already exists (found public.kitchens).",
-    );
+  const files = (await readdir(migrationsDir))
+    .filter((file) => file.endsWith(".sql"))
+    .sort((a, b) => a.localeCompare(b));
+
+  if (files.length === 0) {
+    console.log("No migration files found.");
     process.exit(0);
   }
 
-  await client.query("BEGIN");
-  await client.query(sql);
-  await client.query("COMMIT");
-  console.log("Migration applied successfully.");
-} catch (error) {
-  try {
-    await client.query("ROLLBACK");
-  } catch {
-    // Ignore rollback errors when transaction was not started.
+  const appliedResult = await client.query('SELECT name FROM "_migrations"');
+  const applied = new Set(appliedResult.rows.map((row) => row.name));
+
+  for (const file of files) {
+    if (applied.has(file)) {
+      console.log(`Skipping ${file} (already applied).`);
+      continue;
+    }
+
+    const sql = await readFile(resolve(migrationsDir, file), "utf8");
+    await client.query("BEGIN");
+    try {
+      await client.query(sql);
+      await client.query('INSERT INTO "_migrations" (name) VALUES ($1)', [file]);
+      await client.query("COMMIT");
+      console.log(`Applied ${file}.`);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    }
   }
+
+  console.log("Migration run complete.");
+} catch (error) {
   console.error("Migration failed.");
   console.error(error);
   process.exitCode = 1;
