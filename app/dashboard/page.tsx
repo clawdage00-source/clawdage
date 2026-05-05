@@ -1,5 +1,6 @@
 "use client";
 
+
 import Link from "next/link";
 import { DashboardShell, DashboardStat } from "@/components/dashboard/page-shell";
 
@@ -55,6 +56,6 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
-    </DashboardShell>
+    </div>
   );
 }
